@@ -1,4 +1,4 @@
-# .NET WebForms Migration（勤怠管理システム）
+# .NET WebForms Migration (Attendance Management System)
 
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
 
@@ -8,14 +8,14 @@
 
 ---
 
-## クイックスタート
+## Quick Start
 
-### 前提
+### Prerequisites
 - [Docker Desktop](https://www.docker.com/products/docker-desktop/)
 - .NET SDK 8.0（ローカル開発時）
 - Node.js 20+（ローカル開発時）
 
-### フル起動（Docker のみ）
+### Full Setup (Docker only)
 
 ```bash
 cp .env.example .env
@@ -25,7 +25,7 @@ docker compose up -d --build
 - Frontend + API: http://localhost:5154
 - Swagger UI: http://localhost:5154/api-docs
 
-### ローカル開発（HMR あり）
+### Local Development (with HMR)
 
 ```bash
 # 1. DB のみ起動
@@ -43,7 +43,7 @@ cd src/Web && npm ci && npm run dev
 
 ---
 
-## 1. 概要とゴール
+## 1. Overview and Goals
 
 WebForms アプリは機能する。ページは表示され、データは保存され、CSV も出力される。問題は動作ではなく構造にある。AutoPostBack・ViewState・Page_Load への処理集中は、保守コストを高め、テストを困難にし、改修のたびに影響範囲の特定を難しくする。
 
@@ -53,7 +53,7 @@ WebForms アプリは機能する。ページは表示され、データは保�
 **After Demo (WebForms):** https://webforms.ykts.net  
 **After API ドキュメント (Swagger UI):** `/api-docs`
 
-### 実践のポイント
+### Key Practices
 
 - **解読**: AutoPostBack・ViewState・Page_Load 集中という WebForms 固有の問題の特定
 - **分離**: UI、Service、Repository 層への責務分離
@@ -63,7 +63,7 @@ WebForms アプリは機能する。ページは表示され、データは保�
 
 ---
 
-## 2. Before: レガシーな密結合の実態
+## 2. Before: The Reality of Legacy Tight Coupling
 
 `legacy/AttendanceWebForms/` では、WebForms 時代の典型的な「Page_Load がすべてを知りすぎている」状態を再現している。
 
@@ -86,7 +86,7 @@ WebForms アプリは機能する。ページは表示され、データは保�
 +-----------------------------------------------------------+
 ```
 
-### 主な課題点
+### Key Issues
 
 - **AutoPostBack による UX 劣化**: 部署選択のたびにページ全体がリロードされ、スクロール位置がリセットされる。
 - **ViewState の肥大化**: 打刻履歴・集計データを ViewState に保持することでリクエストサイズが膨張する。
@@ -116,7 +116,7 @@ graph TD
 
 ---
 
-## 3. After Phase 1 — モダンアーキテクチャへの転換
+## 3. After Phase 1 — Transition to Modern Architecture
 
 移行後は責務に応じてコンポーネントを完全に分離し、PostBack を廃止する。
 
@@ -141,7 +141,7 @@ graph LR
     HUB -->|"WebSocket\nClockUpdate / Alerts"| React
 ```
 
-### 計算ロジックの分離（テスタビリティ）
+### Separation of Calculation Logic (Testability)
 
 `AttendanceCalculator` を `AttendanceService` から独立させ、DB 接続なしで計算ロジック単体をテスト可能にしている。
 
@@ -154,7 +154,7 @@ AttendanceService（DBアクセス）
     └── AttendanceCalculator（純粋計算）← xUnit が直接テスト
 ```
 
-### 実装エンドポイント
+### Implemented Endpoints
 
 | Method | Path | 説明 | 認証 |
 |---|---|---|---|
@@ -175,11 +175,11 @@ AttendanceService（DBアクセス）
 
 ---
 
-## 4. After Phase 2 — WebForms の構造的制約を超える
+## 4. After Phase 2 — Beyond the Structural Limits of WebForms
 
 WebForms はサーバーからクライアントへの Push が構造的に不可能。Phase 2 はその制約を起点に、リアルタイム運用監視を実装する。
 
-### Before / After 対比
+### Before / After Comparison
 
 | Before (WebForms) | After (.NET 8 + React) |
 |---|---|
@@ -188,7 +188,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 | 36 協定超過は月末集計で初めて判明 | 閾値接近時点でリアルタイム警告 |
 | 打刻修正時刻は個別ヒアリング | 平均退勤時刻をデフォルト値として自動セット |
 
-### 追加機能
+### Added Features
 
 | 機能 | 実装 | 内容 |
 |---|---|---|
@@ -199,7 +199,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ---
 
-## 5. 技術スタック
+## 5. Tech Stack
 
 | Layer | Technology |
 |---|---|
@@ -210,7 +210,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ---
 
-## 6. モダナイゼーションの方針
+## 6. Modernization Policy
 
 1. **AutoPostBack の根絶**: 状態変更をすべて非同期 API 呼び出しに置き換え、ブラウザの恩恵を取り戻す。
 2. **ViewState レスな設計**: サーバーに状態を持たせず、API ドリブンで必要なデータのみ取得する。
@@ -225,12 +225,12 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ---
 
-## 7. デモ運用
+## 7. Demo Operations
 
-### Before デモ
+### Before Demo
 `legacy/AttendanceWebForms/index.html` を Cloudflare Pages でホスト。URL 固定・常時稼働。
 
-### After デモ
+### After Demo
 
 [order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms After）と本リポ（WebForms After）はそれぞれ独立した Cloudflare Tunnel を持ち、**両方常時稼働**する。
 
@@ -255,7 +255,7 @@ graph LR
     SVC1 --> DB1
 ```
 
-### デプロイ手順（初回）
+### Deployment Steps (Initial)
 
 **1. サーバー要件**
 
@@ -280,7 +280,7 @@ cp .env.example .env
 
 ---
 
-## 8. order-system-migration との対比
+## 8. Comparison with order-system-migration
 
 | | [order-system-migration](https://github.com/yktsnet/order-system-migration) | attendance-system-migration（本リポ） |
 |---|---|---|
@@ -293,7 +293,7 @@ cp .env.example .env
 
 ---
 
-## 9. ディレクトリ構造
+## 9. Directory Structure
 
 ```
 .
