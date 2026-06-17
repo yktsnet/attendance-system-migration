@@ -70,6 +70,8 @@ jobs:
             --exclude='node_modules' \
             --exclude='volume' \
             --exclude='.env' \
+            --exclude='**/bin/' \
+            --exclude='**/obj/' \
             -e "ssh -i ~/.ssh/id_ed25519" \
             . ${{ secrets.DEPLOY_USER }}@${{ secrets.DEPLOY_HOST }}:${{ env.APP_PATH }}/
 
