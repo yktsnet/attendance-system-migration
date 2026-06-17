@@ -44,13 +44,13 @@ export function MonthlySummary({ employeeId, employeeName }: Props) {
   ]
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-8">
-      <div className="flex items-center justify-between mb-6">
+    <div className="bg-white border border-slate-200 rounded-lg p-4 sm:p-8">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
         <div>
           <h2 className="text-slate-700 font-semibold">月次サマリー</h2>
           <p className="text-xs text-slate-400 mt-0.5">対象: {employeeId}　{employeeName}</p>
         </div>
-        <div className="flex items-center gap-2 text-sm">
+        <div className="flex items-center gap-2 text-sm self-end sm:self-auto">
           <button onClick={prev} className="px-2 text-slate-400 hover:text-slate-700 text-lg">‹</button>
           <span className="font-medium text-slate-700 w-24 text-center">{year}年{month}月</span>
           <button onClick={next} className="px-2 text-slate-400 hover:text-slate-700 text-lg">›</button>
@@ -61,7 +61,7 @@ export function MonthlySummary({ employeeId, employeeName }: Props) {
         <div className="text-slate-400 text-sm text-center py-6">読み込み中...</div>
       ) : (
         <>
-          <div className="grid grid-cols-3 gap-4 mb-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
             {stats.map(s => (
               <div key={s.label} className="bg-slate-50 rounded-lg p-4 text-center">
                 <div className="text-xs text-slate-500 mb-1">{s.label}</div>

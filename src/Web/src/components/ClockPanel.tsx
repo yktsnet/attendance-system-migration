@@ -91,10 +91,10 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-8 relative">
+    <div className="bg-white border border-slate-200 rounded-lg p-4 sm:p-8 relative">
 
       {/* デモリセット（右上） */}
-      <div className="absolute top-4 right-4 flex flex-col items-end gap-1">
+      <div className="md:absolute top-4 right-4 flex flex-col items-end gap-1 mb-6 md:mb-0">
         <button
           onClick={handleDemoReset}
           disabled={resetting}
@@ -110,12 +110,12 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
       </div>
 
       {/* 社員選択 + 状態 */}
-      <div className="flex items-center gap-3 mb-8">
+      <div className="flex flex-wrap items-center gap-3 mb-8 mt-12 md:mt-0">
         <label className="text-sm text-slate-600 font-medium whitespace-nowrap">社員:</label>
         <select
           value={selectedId}
           onChange={e => setSelectedId(e.target.value)}
-          className="border border-slate-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500"
+          className="border border-slate-300 rounded px-3 py-1.5 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-emerald-500 max-w-xs"
         >
           {employees.map(e => (
             <option key={e.id} value={e.id}>{e.id}　{e.name}</option>
@@ -128,7 +128,7 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
 
       {/* 時計 */}
       <div className="text-center mb-10">
-        <div className="text-5xl font-mono text-slate-800 tracking-wide">
+        <div className="text-4xl sm:text-5xl font-mono text-slate-800 tracking-wide">
           {now.toLocaleTimeString('ja-JP')}
         </div>
         <div className="text-sm text-slate-500 mt-2">
@@ -139,11 +139,11 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
       </div>
 
       {/* 打刻ボタン */}
-      <div className="flex justify-center gap-6 mb-4">
+      <div className="flex justify-center gap-4 sm:gap-6 mb-4 w-full">
         <button
           onClick={() => handleClock('in')}
           disabled={clockStatus !== 'none' || loading !== null}
-          className="w-36 py-4 rounded-lg font-medium text-base transition-colors
+          className="flex-1 max-w-[144px] py-4 rounded-lg font-medium text-base transition-colors
             bg-emerald-600 hover:bg-emerald-700 text-white
             disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed"
         >
@@ -152,7 +152,7 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
         <button
           onClick={() => handleClock('out')}
           disabled={clockStatus !== 'clocked-in' || loading !== null}
-          className="w-36 py-4 rounded-lg font-medium text-base transition-colors
+          className="flex-1 max-w-[144px] py-4 rounded-lg font-medium text-base transition-colors
             bg-slate-700 hover:bg-slate-800 text-white
             disabled:bg-slate-100 disabled:text-slate-300 disabled:cursor-not-allowed"
         >

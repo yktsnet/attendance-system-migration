@@ -47,13 +47,13 @@ export default function App() {
   const selectedEmployee = employees.find(e => e.id === selectedId)
 
   return (
-    <div className="min-h-screen bg-slate-50">
-      <header className="bg-slate-800 text-white px-6 py-3 flex items-center justify-between">
+    <div className="min-h-screen bg-slate-50 flex flex-col">
+      <header className="bg-slate-800 text-white px-6 py-3 flex items-center justify-between flex-wrap gap-2">
         <div className="flex items-center gap-2">
           <span className="text-xl">🕐</span>
           <span className="font-semibold text-lg">勤怠管理システム</span>
         </div>
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           {isAdmin && (
             <>
               <span className="text-amber-400 text-sm">● 管理者モード</span>
@@ -70,12 +70,12 @@ export default function App() {
       </header>
 
       <nav className="bg-white border-b border-slate-200">
-        <div className="max-w-4xl mx-auto px-6 flex gap-1 pt-2">
+        <div className="max-w-4xl mx-auto px-6 flex gap-1 pt-2 overflow-x-auto whitespace-nowrap scrollbar-none">
           {TABS.map(t => (
             <button
               key={t.key}
               onClick={() => setTab(t.key)}
-              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+              className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors flex-shrink-0 ${
                 tab === t.key
                   ? 'border-emerald-600 text-emerald-600'
                   : 'border-transparent text-slate-500 hover:text-slate-700'
@@ -90,7 +90,7 @@ export default function App() {
         </div>
       </nav>
 
-      <main className="max-w-4xl mx-auto px-6 py-6 pb-16">
+      <main className="max-w-4xl mx-auto w-full px-4 sm:px-6 py-6 flex-grow">
         <div className={tab === 'clock' ? 'block' : 'hidden'}>
           <ClockPanel
             employees={employees}
@@ -120,8 +120,8 @@ export default function App() {
         </div>
       </main>
 
-      <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-400 flex justify-between">
-        <span>Target: .NET 8 Web API + React　　Database: PostgreSQL</span>
+      <footer className="bg-white border-t border-slate-200 px-6 py-3 text-xs text-slate-400 flex flex-col sm:flex-row justify-between items-center gap-2 mt-auto">
+        <span className="text-center sm:text-left">Target: .NET 8 Web API + React　　Database: PostgreSQL</span>
         <span>© 2026 勤怠管理システム</span>
       </footer>
     </div>

@@ -114,8 +114,8 @@ export function EmployeeManager({ token }: Props) {
       </div>
 
       {/* テーブル */}
-      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-        <table className="w-full text-sm">
+      <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+        <table className="w-full text-sm min-w-[500px]">
           <thead className="bg-slate-50 border-b border-slate-200">
             <tr>
               <th className="px-4 py-3 text-left   text-slate-600 font-medium">ID</th>
@@ -160,8 +160,8 @@ export function EmployeeManager({ token }: Props) {
 
       {/* モーダル */}
       {modal && (
-        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-4">
+        <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-md mx-auto max-h-[90vh] overflow-y-auto">
             <h3 className="text-base font-semibold text-slate-800 mb-5">
               {modal === 'add' ? '社員追加' : '社員情報編集'}
             </h3>

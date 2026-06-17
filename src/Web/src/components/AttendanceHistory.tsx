@@ -71,11 +71,11 @@ export function AttendanceHistory({ employeeId, employeeName, isAdmin, token }: 
   return (
     <div>
       {/* ヘッダー: タイトル + CSVダウンロード */}
-      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
         <h2 className="text-lg font-semibold text-slate-800">
           打刻履歴 — {employeeName}
         </h2>
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 flex-wrap sm:flex-nowrap">
           <input
             type="number"
             value={csvYear}
@@ -111,8 +111,8 @@ export function AttendanceHistory({ employeeId, employeeName, isAdmin, token }: 
       {logs.length === 0 ? (
         <p className="text-slate-500 text-sm">打刻履歴がありません。</p>
       ) : (
-        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden">
-          <table className="w-full text-sm">
+        <div className="bg-white rounded-xl border border-slate-200 overflow-hidden overflow-x-auto">
+          <table className="w-full text-sm min-w-[600px]">
             <thead className="bg-slate-50 border-b border-slate-200">
               <tr>
                 <th className="px-4 py-3 text-left   text-slate-600 font-medium">日付</th>
