@@ -267,7 +267,11 @@ cloudflared tunnel create webforms-migration
 cloudflared tunnel route dns webforms-migration webforms.ykts.net
 ```
 
-**2. Mac からデプロイ**
+**2. デプロイ**
+
+main ブランチへの push で GitHub Actions が自動デプロイします（Tailscale 経由 rsync + `docker compose up --build`）。
+
+手動デプロイが必要な場合:
 
 ```bash
 cp .env.example .env
@@ -295,7 +299,8 @@ cp .env.example .env
 .
 ├── .github/
 │   └── workflows/
-│       └── ci.yml                        # CI（.NET テスト + React ビルド）
+│       ├── ci.yml                        # CI（.NET テスト + React ビルド）
+│       └── deploy.yml                    # Deploy（Tailscale 経由 rsync + docker compose up）
 ├── infrastructure/
 │   ├── db/
 │   │   ├── init/
