@@ -1,6 +1,7 @@
 # .NET WebForms Migration (Attendance Management System)
 
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
+[![Deploy](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml)
 
 レガシーな WebForms 業務アプリを題材に、`.NET 8 Web API + React` への段階的移行を実践するサンプルプロジェクト。
 
@@ -232,6 +233,8 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ### After Demo
 
+**After Demo (WebForms):** https://webforms.ykts.net
+
 [order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms After）と本リポ（WebForms After）はそれぞれ独立した Cloudflare Tunnel を持ち、**両方常時稼働**する。
 
 ```mermaid
@@ -267,7 +270,19 @@ cloudflared tunnel create webforms-migration
 cloudflared tunnel route dns webforms-migration webforms.ykts.net
 ```
 
-**2. デプロイ**
+**2. GitHub Secrets の設定**
+
+GitHub リポジトリの Settings → Secrets → Actions に以下を登録してください。
+
+| Secret | 説明 |
+|---|---|
+| `DEPLOY_HOST` | デプロイ先の Tailscale ホスト名（例: `sv6.tail166775.ts.net`） |
+| `DEPLOY_USER` | デプロイ先のユーザー名（例: `sv6`） |
+| `SSH_PRIVATE_KEY` | デプロイ先への SSH 秘密鍵 |
+| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth Client ID（Keys: Write スコープ） |
+| `TS_OAUTH_SECRET` | Tailscale OAuth Secret |
+
+**3. デプロイ**
 
 main ブランチへの push で GitHub Actions が自動デプロイします（Tailscale 経由 rsync + `docker compose up --build`）。
 
