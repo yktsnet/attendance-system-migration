@@ -31,12 +31,15 @@ jobs:
         with:
           dotnet-version: '8.0.x'
 
+      - name: Restore
+        run: dotnet restore src/Api.Tests/AttendanceApi.Tests.csproj
+
       - name: Init DB
         run: |
           PGPASSWORD=kintai_pass psql -h 127.0.0.1 -U kintai_user -d KINTAI \
             < infrastructure/db/init/01_schema.sql
 
-      - name: Restore & Test
+      - name: Test
         run: dotnet test src/Api.Tests/AttendanceApi.Tests.csproj --no-restore --verbosity normal
 
   deploy:
