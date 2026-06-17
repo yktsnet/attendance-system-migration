@@ -3,7 +3,7 @@
 # 実行場所: サーバー上で直接実行
 set -euo pipefail
 
-APP_DIR="/home/${USER}/apps/webforms-migration"
+APP_DIR="${DEPLOY_PATH:-/home/${USER}/github-public/attendance-system-migration}"
 
 echo "==> [1/2] Docker 確認"
 if ! command -v docker &>/dev/null; then

@@ -91,33 +91,33 @@ export default function App() {
       </nav>
 
       <main className="max-w-4xl mx-auto px-6 py-6 pb-16">
-        {tab === 'clock' && (
+        <div className={tab === 'clock' ? 'block' : 'hidden'}>
           <ClockPanel
             employees={employees}
             selectedId={selectedId}
             setSelectedId={setSelectedId}
           />
-        )}
-        {tab === 'summary' && (
+        </div>
+        <div className={tab === 'summary' ? 'block' : 'hidden'}>
           <MonthlySummary
             employeeId={selectedId}
             employeeName={selectedEmployee?.name ?? ''}
           />
-        )}
-        {tab === 'history' && (
+        </div>
+        <div className={tab === 'history' ? 'block' : 'hidden'}>
           <AttendanceHistory
             employeeId={selectedId}
             employeeName={selectedEmployee?.name ?? ''}
             isAdmin={isAdmin}
             token={token}
           />
-        )}
-        {tab === 'dashboard' && (
+        </div>
+        <div className={tab === 'dashboard' ? 'block' : 'hidden'}>
           <Dashboard isAdmin={isAdmin} />
-        )}
-        {tab === 'admin' && (
+        </div>
+        <div className={tab === 'admin' ? 'block' : 'hidden'}>
           <AdminPanel token={token} onLogin={handleLogin} />
-        )}
+        </div>
       </main>
 
       <footer className="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-6 py-2 text-xs text-slate-400 flex justify-between">
