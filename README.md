@@ -202,16 +202,28 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ## 5. Tech Stack
 
-| Layer | Technology |
-|---|---|
-| **Frontend** | React, TypeScript, Vite, Tailwind CSS |
-| **Backend** | .NET 8 (Minimal API), SignalR, xUnit |
-| **Database** | PostgreSQL (Dapper) |
-| **Infrastructure** | Docker Compose, Cloudflare Tunnel, GitHub Actions, NixOS (オンプレ) |
+| Layer | Technology | Reason |
+|---|---|---|
+| **Frontend** | React, TypeScript, Vite, Tailwind CSS | 打刻 UX と管理ダッシュボードを同一 SPA で構成。型安全と高速ビルドを両立 |
+| **Backend** | .NET 8 (Minimal API), SignalR, xUnit | 移行元 WebForms の C# 資産を引き継ぎ軽量 API へ再構成。Push 機能は SignalR、計算ロジックは xUnit で担保 |
+| **Database** | PostgreSQL (Dapper) | ORM フル機能に依存せず、SQL に近い軽量アクセスで勤怠集計を扱う |
+| **Infrastructure** | Docker Compose, Cloudflare Tunnel, GitHub Actions, NixOS (オンプレ) | IIS/Windows 依存を排除し同一手順で起動。CI/CD・常時公開まで一人で構築 |
 
 ---
 
-## 6. Modernization Policy
+## 6. Design Decisions
+
+技術選定・仕様判断の根拠（開発中の判断ログ `JUDGE.md` を統合）。
+
+- **段階移行に Strangler Fig を採らない**: 教科書的には締め殺しパターンで段階置換するが、本規模では並走経路を追うコストが高く、かえって見通しを悪くする。構造分離を一度で行う方針とした。
+- **休憩は「±分」で扱う**: 休憩（デフォルト 60 分）を開始・終了時刻で送らせるのは現場運用に馴染まない。「何分多い/少ない」を入力する方が自然で、管理者がなるべく考えずに済む設計にした。
+- **端数の丸めは健全側へ**: 社員ごとの丸め単位で、少し早く出ても遅く出ても不利・有利が偏らないようにする。残業割増（法定超過 ×1.25）と合わせ、給与計算の自動化に寄与させる。
+- **未退勤は「事前検知」する**: 勤怠で最も頻発するのは退勤忘れ（出勤はほぼ確実に打刻される）。事後の自己申告を不要にするため、平均退勤時刻 +1h を超えた未退勤を `IHostedService` で先回り検知する。さらに進めれば平均値での自動補完も可能。
+- **リアルタイム出勤ボード**: 誰が今働いているかを一目で把握するため、WebForms では不可能だった Push をダッシュボードとして実装した。
+
+---
+
+## 7. Modernization Policy
 
 1. **AutoPostBack の根絶**: 状態変更をすべて非同期 API 呼び出しに置き換え、ブラウザの恩恵を取り戻す。
 2. **ViewState レスな設計**: サーバーに状態を持たせず、API ドリブンで必要なデータのみ取得する。
@@ -226,7 +238,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ---
 
-## 7. Demo Operations
+## 8. Demo Operations
 
 ### Before Demo
 `legacy/AttendanceWebForms/index.html` を Cloudflare Pages でホスト。URL 固定・常時稼働。
@@ -295,7 +307,7 @@ cp .env.example .env
 
 ---
 
-## 8. Comparison with order-system-migration
+## 9. Comparison with order-system-migration
 
 | | [order-system-migration](https://github.com/yktsnet/order-system-migration) | attendance-system-migration（本リポ） |
 |---|---|---|
@@ -308,7 +320,7 @@ cp .env.example .env
 
 ---
 
-## 9. Directory Structure
+## 10. Directory Structure
 
 ```
 .
