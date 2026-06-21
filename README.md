@@ -213,24 +213,20 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ## 6. Design Decisions
 
-技術選定・仕様判断の根拠（開発中の判断ログ `JUDGE.md` を統合）。
+技術選定の理由は §5 Tech Stack、各機能の実装意図は §3・§4 に併記している。本節では横断的な設計判断のみ記す（判断ログ `JUDGE.md` より）。
 
-- **段階移行に Strangler Fig を採らない**: 教科書的には締め殺しパターンで段階置換するが、本規模では並走経路を追うコストが高く、かえって見通しを悪くする。構造分離を一度で行う方針とした。
-- **休憩は「±分」で扱う**: 休憩（デフォルト 60 分）を開始・終了時刻で送らせるのは現場運用に馴染まない。「何分多い/少ない」を入力する方が自然で、管理者がなるべく考えずに済む設計にした。
-- **端数の丸めは健全側へ**: 社員ごとの丸め単位で、少し早く出ても遅く出ても不利・有利が偏らないようにする。残業割増（法定超過 ×1.25）と合わせ、給与計算の自動化に寄与させる。
-- **未退勤は「事前検知」する**: 勤怠で最も頻発するのは退勤忘れ（出勤はほぼ確実に打刻される）。事後の自己申告を不要にするため、平均退勤時刻 +1h を超えた未退勤を `IHostedService` で先回り検知する。さらに進めれば平均値での自動補完も可能。
-- **リアルタイム出勤ボード**: 誰が今働いているかを一目で把握するため、WebForms では不可能だった Push をダッシュボードとして実装した。
+- **段階移行に Strangler Fig を採らない**: 教科書的には締め殺しパターンで段階置換するが、本規模では並走経路を追うコストが見通しを悪くする。構造分離を一度で行う方針とした。
+- **「管理者が考えなくていい」を仕様の軸に**: 休憩の ±分入力・社員ごとの端数丸め・残業割増の自動計算・未退勤の事前検知は、いずれも管理者の判断と手作業を減らすための設計（個別の実装は §3・§4 を参照）。
 
 ---
 
 ## 7. Modernization Policy
 
-1. **AutoPostBack の根絶**: 状態変更をすべて非同期 API 呼び出しに置き換え、ブラウザの恩恵を取り戻す。
-2. **ViewState レスな設計**: サーバーに状態を持たせず、API ドリブンで必要なデータのみ取得する。
-3. **Page_Load の解体 (Service 層)**: 混在処理を切り出し、単体テストで変更の安全性を担保する。
-4. **環境の抽象化 (Docker)**: IIS / Windows Server 依存を排除し、どこでも同一手順で起動できる構成へ。
-5. **CI/CD のパイプライン化 (GitHub Actions)**: push ごとにビルド・テストを自動実行。PostgreSQL サービスコンテナで統合テストも CI 上で完結。
-6. **構造分離後の拡張性**: 責務が分離された構造では、WebForms では実装不可能だった Push 型機能を後から追加できる。SignalR の統合がその実証。
+WebForms 固有問題（AutoPostBack・ViewState・Page_Load 集中）の解体は §3 を参照。本節では構造分離そのもの以外の方針を記す。
+
+1. **環境の抽象化 (Docker)**: IIS / Windows Server 依存を排除し、どこでも同一手順で起動できる構成へ。
+2. **CI/CD のパイプライン化 (GitHub Actions)**: push ごとにビルド・テストを自動実行。PostgreSQL サービスコンテナで統合テストも CI 上で完結。
+3. **構造分離後の拡張性**: 責務が分離された構造では、WebForms では実装不可能だった Push 型機能を後から追加できる。SignalR の統合がその実証。
 
 > **Focus & Scope**  
 > 本プロジェクトは **「WebForms 固有の問題の解体と構造分離」** に特化している。  
@@ -282,21 +278,10 @@ cloudflared tunnel create webforms-migration
 cloudflared tunnel route dns webforms-migration webforms.ykts.net
 ```
 
-**2. GitHub Secrets の設定**
-
-GitHub リポジトリの Settings → Secrets → Actions に以下を登録してください。
-
-| Secret | 説明 |
-|---|---|
-| `DEPLOY_HOST` | デプロイ先の Tailscale ホスト名（例: `sv6.tail166775.ts.net`） |
-| `DEPLOY_USER` | デプロイ先のユーザー名（例: `sv6`） |
-| `SSH_PRIVATE_KEY` | デプロイ先への SSH 秘密鍵 |
-| `TS_OAUTH_CLIENT_ID` | Tailscale OAuth Client ID（Keys: Write スコープ） |
-| `TS_OAUTH_SECRET` | Tailscale OAuth Secret |
-
-**3. デプロイ**
+**2. デプロイ**
 
 main ブランチへの push で GitHub Actions が自動デプロイします（Tailscale 経由 rsync + `docker compose up --build`）。
+必要な GitHub Secrets（デプロイ先ホスト・SSH 鍵・Tailscale OAuth 等）はリポジトリ運用ドキュメントで管理する（README には記載しない）。
 
 手動デプロイが必要な場合:
 
