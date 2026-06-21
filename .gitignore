@@ -42,7 +42,6 @@ PLAN.md
 JUDGE.md
 
 # --- Claude project files ---
-.claude/
-CLAUDE.md
-context/
-issues/
+# 公開リポのため harness（settings.json / CLAUDE.md / context / issues）は追跡する。
+# 個人ローカル上書きのみ無視。
+.claude/settings.local.json
