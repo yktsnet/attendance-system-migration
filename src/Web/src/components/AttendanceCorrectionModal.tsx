@@ -86,10 +86,11 @@ export function AttendanceCorrectionModal({
 
         <div className="space-y-3">
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="clockIn" className="block text-sm font-medium text-slate-700 mb-1">
               修正後 出勤時刻
             </label>
             <input
+              id="clockIn"
               type="datetime-local"
               value={clockIn}
               onChange={e => setClockIn(e.target.value)}
@@ -98,10 +99,11 @@ export function AttendanceCorrectionModal({
             />
           </div>
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="clockOut" className="block text-sm font-medium text-slate-700 mb-1">
               修正後 退勤時刻
             </label>
             <input
+              id="clockOut"
               type="datetime-local"
               value={clockOut}
               onChange={e => setClockOut(e.target.value)}
@@ -112,11 +114,12 @@ export function AttendanceCorrectionModal({
 
           {/* 休憩調整 */}
           <div>
-            <label className="block text-sm font-medium text-slate-700 mb-1">
+            <label htmlFor="breakAdjustment" className="block text-sm font-medium text-slate-700 mb-1">
               休憩調整（申請 {BASE_BREAK_MINUTES}分 ± 分）
             </label>
             <div className="flex items-center gap-2">
               <input
+                id="breakAdjustment"
                 type="number"
                 value={adjustmentMinutes}
                 onChange={e => setAdjustmentMinutes(Number(e.target.value))}
