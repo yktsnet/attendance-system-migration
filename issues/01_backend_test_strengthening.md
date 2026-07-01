@@ -2,7 +2,7 @@
 id: 01
 skill: pr-workflow
 branch-slug: backend-test-strengthening
-github_issue:
+github_issue: 1
 status: open
 type: fix
 対象: src/Api.Tests/ClockInTests.cs, src/Api.Tests/AttendanceApi.Tests.csproj, src/Api/Services/LateStayCheckService.cs, src/Api.Tests/LateStayCheckServiceTests.cs (新規), src/Api/Services/AttendanceService.cs, src/Api/Endpoints/AttendanceEndpoints.cs, src/Api.Tests/CsvExportTests.cs (新規)
