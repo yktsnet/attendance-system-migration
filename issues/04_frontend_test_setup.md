@@ -3,7 +3,7 @@ id: 04
 skill: pr-workflow
 branch-slug: frontend-test-setup
 github_issue: 3
-status: open
+status: close
 type: feat
 対象: src/Web/package.json, src/Web/vite.config.ts, src/Web/src/components (テスト対象を精査), src/Web/src/*.test.tsx (新規)
 内容: src/Web に React 側のテストが一切ない。Vitest + Testing Library でテスト基盤を導入し、主要コンポーネント・api.ts のロジックに対するテストを追加する。
