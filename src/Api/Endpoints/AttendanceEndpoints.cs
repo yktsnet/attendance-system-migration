@@ -34,9 +34,8 @@ public static class AttendanceEndpoints
         app.MapGet("/attendances/{employeeId}/monthly",
             async (string employeeId, int? year, int? month, AttendanceService svc) =>
         {
-            var now = DateTime.Now;
-            return Results.Ok(await svc.GetMonthlyAsync(
-                employeeId, year ?? now.Year, month ?? now.Month));
+            var (y, m) = ResolveYearMonth(year, month);
+            return Results.Ok(await svc.GetMonthlyAsync(employeeId, y, m));
         })
         .WithName("GetMonthlySummary").WithTags("Attendances");
 
@@ -48,9 +47,7 @@ public static class AttendanceEndpoints
         app.MapGet("/attendances/{employeeId}/monthly/csv",
             async (string employeeId, int? year, int? month, AttendanceService svc, HttpResponse response) =>
         {
-            var now = DateTime.Now;
-            var y   = year  ?? now.Year;
-            var m   = month ?? now.Month;
+            var (y, m) = ResolveYearMonth(year, month);
             var csv = await svc.ExportMonthlyCsvAsync(employeeId, y, m);
             response.Headers["Content-Disposition"] =
                 $"attachment; filename=attendance_{employeeId}_{y}{m:D2}.csv";
@@ -61,9 +58,8 @@ public static class AttendanceEndpoints
         app.MapGet("/attendances/{employeeId}/payroll",
             async (string employeeId, int? year, int? month, AttendanceService svc) =>
         {
-            var now = DateTime.Now;
-            return Results.Ok(await svc.CalcMonthlyPayrollAsync(
-                employeeId, year ?? now.Year, month ?? now.Month));
+            var (y, m) = ResolveYearMonth(year, month);
+            return Results.Ok(await svc.CalcMonthlyPayrollAsync(employeeId, y, m));
         })
         .WithName("GetMonthlyPayroll").WithTags("Attendances");
 
@@ -73,5 +69,12 @@ public static class AttendanceEndpoints
             return Results.Ok();
         })
         .WithName("DemoReset").WithTags("Demo");
+    }
+
+    // year/month 未指定時は現在年月を使う（各エンドポイント共通の解決ロジック）
+    private static (int Year, int Month) ResolveYearMonth(int? year, int? month)
+    {
+        var now = DateTime.Now;
+        return (year ?? now.Year, month ?? now.Month);
     }
 }
