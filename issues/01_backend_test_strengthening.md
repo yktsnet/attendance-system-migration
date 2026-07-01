@@ -3,7 +3,7 @@ id: 01
 skill: pr-workflow
 branch-slug: backend-test-strengthening
 github_issue: 1
-status: open
+status: close
 type: fix
 対象: src/Api.Tests/ClockInTests.cs, src/Api.Tests/AttendanceApi.Tests.csproj, src/Api/Services/LateStayCheckService.cs, src/Api.Tests/LateStayCheckServiceTests.cs (新規), src/Api/Services/AttendanceService.cs, src/Api/Endpoints/AttendanceEndpoints.cs, src/Api.Tests/CsvExportTests.cs (新規)
 内容: バックエンドの単体テストが薄い3領域をまとめて強化する。(1) ClockInTests.cs が実PostgreSQL接続前提でローカルにPostgres未起動だと必ず失敗する問題を解消し軽量単体テストを追加、(2) 深夜労働自動警告 LateStayCheckService に判定ロジックのテストを追加、(3) CSVエクスポート・デモデータ投入の整形ロジックにテストを追加。いずれも検証手段は `dotnet test` で共通。
