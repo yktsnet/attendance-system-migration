@@ -17,7 +17,7 @@ disable-model-invocation: true
    - フロントエンドを変更した場合: `cd src/Web && npm ci && npm run build`。
    - `docker` および `ssh` / `rsync` コマンドは実行禁止。
 5. PRボディと控えファイルの作成。
-   - `.git/pr_body.md` に以下の内容を書き出す。
+   - `issues/.pr_body_draft.md` に以下の内容を書き出す。
    - 同内容を `issues/done/{id}_{branch-slug}_pr.md` にもコピーして作成する。
    - 情報セキュリティ: PR本文・コミットメッセージ・控えファイルに、固有の接続情報（ドメイン実値・公開ポート・本番絶対パス・SSHユーザ名等）を直書きしない。デバイス名（`sv6`）・localhost・開発ポート・リポジトリ相対パスは可。
 
@@ -38,5 +38,5 @@ disable-model-invocation: true
 8. リモートへのプッシュ。
    - 現在のブランチをリモートにプッシュする（例: `git push origin HEAD`）。
 9. PRの作成。
-   - `gh pr create --base main --title "{type}: {タイトル}" --body-file .git/pr_body.md` を実行。
+   - `gh pr create --base main --title "{type}: {タイトル}" --body-file issues/.pr_body_draft.md` を実行。
 10. 作成されたPRのURLを出力してタスクを終了。
