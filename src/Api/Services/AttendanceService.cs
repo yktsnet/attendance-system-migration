@@ -42,6 +42,13 @@ public record MonthlyPayrollDto(
     decimal TotalPay
 );
 
+public record DemoAttendanceRecord(
+    string EmployeeId,
+    DateTime ClockIn,
+    DateTime ClockOut,
+    bool IsCorrected
+);
+
 public class AttendanceService
 {
     private readonly string _connectionString;
@@ -70,7 +77,7 @@ public class AttendanceService
                   AND DATE(clock_in) = CURRENT_DATE
                   AND clock_out IS NULL";
             var count = await conn.ExecuteScalarAsync<int>(checkSql, new { req.EmployeeId }, tran);
-            if (count > 0) return false;
+            if (!ShouldAllowClockIn(count)) return false;
 
             const string sql = "INSERT INTO attendance_logs (employee_id, clock_in) VALUES (@EmployeeId, NOW())";
             await conn.ExecuteAsync(sql, new { req.EmployeeId }, tran);
@@ -112,7 +119,7 @@ public class AttendanceService
                   AND clock_out IS NULL
                 LIMIT 1";
             var id = await conn.ExecuteScalarAsync<int?>(findSql, new { req.EmployeeId }, tran);
-            if (id == null) return false;
+            if (!ShouldAllowClockOut(id)) return false;
 
             const string sql = "UPDATE attendance_logs SET clock_out = NOW() WHERE id = @Id";
             await conn.ExecuteAsync(sql, new { Id = id }, tran);
@@ -195,6 +202,15 @@ public class AttendanceService
     public async Task<byte[]> ExportMonthlyCsvAsync(string employeeId, int year, int month)
     {
         var logs = await GetMonthlyLogsAsync(employeeId, year, month);
+        var csv  = FormatMonthlyCsv(logs);
+        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(csv)).ToArray();
+    }
+
+    /// <summary>
+    /// 月次勤怠ログをCSV文字列（ヘッダ行含む、BOMなし）に整形する。DB非依存で単体テスト可能。
+    /// </summary>
+    public static string FormatMonthlyCsv(IEnumerable<AttendanceLogDto> logs)
+    {
         var sb = new StringBuilder();
         sb.AppendLine("日付,出勤時刻,退勤時刻,休憩(分),勤務時間(h),修正フラグ");
         foreach (var log in logs)
@@ -211,7 +227,7 @@ public class AttendanceService
                 $"{hours}," +
                 $"{log.IsCorrected}");
         }
-        return Encoding.UTF8.GetPreamble().Concat(Encoding.UTF8.GetBytes(sb.ToString())).ToArray();
+        return sb.ToString();
     }
 
     public async Task ResetForDemoAsync()
@@ -235,24 +251,52 @@ public class AttendanceService
                 .Select(DateOnly.FromDateTime)
                 .ToHashSet();
 
-            var current = DemoStartDate;
-            while (current <= yesterday)
+            var records = GenerateDemoRecords(emp.Id, existingDates, DemoStartDate, yesterday, emp.RoundUnitMinutes, rng);
+            foreach (var rec in records)
             {
-                if (current.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-                    && !existingDates.Contains(current))
-                {
-                    var (clockIn, clockOut) = GenerateWorkTime(current, emp.RoundUnitMinutes, rng);
-                    var corrected = rng.NextDouble() < 0.05;
-                    await conn.ExecuteAsync(
-                        @"INSERT INTO attendance_logs (employee_id, clock_in, clock_out, is_corrected)
-                          VALUES (@EmployeeId, @ClockIn, @ClockOut, @IsCorrected)
-                          ON CONFLICT DO NOTHING",
-                        new { EmployeeId = emp.Id, ClockIn = clockIn, ClockOut = clockOut, IsCorrected = corrected });
-                }
-                current = current.AddDays(1);
+                await conn.ExecuteAsync(
+                    @"INSERT INTO attendance_logs (employee_id, clock_in, clock_out, is_corrected)
+                      VALUES (@EmployeeId, @ClockIn, @ClockOut, @IsCorrected)
+                      ON CONFLICT DO NOTHING",
+                    new { EmployeeId = rec.EmployeeId, ClockIn = rec.ClockIn, ClockOut = rec.ClockOut, IsCorrected = rec.IsCorrected });
             }
         }
     }
+
+    /// <summary>
+    /// 1名分のデモ勤怠データを生成する（DB非依存）。土日・既存日付はスキップし、
+    /// 対象期間内で重複のない1日1件のレコード群を返す。投入整合性（必須項目充足・重複なし）を単体テスト可能。
+    /// </summary>
+    public static List<DemoAttendanceRecord> GenerateDemoRecords(
+        string employeeId,
+        IEnumerable<DateOnly> existingDates,
+        DateOnly demoStartDate,
+        DateOnly lastDate,
+        int roundUnitMinutes,
+        Random rng)
+    {
+        var existing = existingDates as ISet<DateOnly> ?? existingDates.ToHashSet();
+        var records  = new List<DemoAttendanceRecord>();
+        var current  = demoStartDate;
+        while (current <= lastDate)
+        {
+            if (current.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday
+                && !existing.Contains(current))
+            {
+                var (clockIn, clockOut) = GenerateWorkTime(current, roundUnitMinutes, rng);
+                var corrected = rng.NextDouble() < 0.05;
+                records.Add(new DemoAttendanceRecord(employeeId, clockIn, clockOut, corrected));
+            }
+            current = current.AddDays(1);
+        }
+        return records;
+    }
+
+    /// <summary>当日に未退勤の打刻が既に存在する場合は出勤打刻を許可しない（重複打刻判定）。DB非依存で単体テスト可能。</summary>
+    public static bool ShouldAllowClockIn(int existingOpenEntryCount) => existingOpenEntryCount == 0;
+
+    /// <summary>当日の未退勤打刻が存在する場合のみ退勤打刻を許可する。DB非依存で単体テスト可能。</summary>
+    public static bool ShouldAllowClockOut(int? openEntryId) => openEntryId != null;
 
     // --- private ---
     private async Task<string> GetEmployeeNameAsync(string employeeId)
