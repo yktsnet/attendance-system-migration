@@ -367,3 +367,7 @@ cp .env.example .env
 ├── docker-compose.yml
 └── README.md
 ```
+
+## How this was built
+
+Development follows an issue-driven workflow that separates design (interactive AI), implementation (autonomous AI), and verification (human merge). An AI agent implements each change starting from an issue file, and dangerous operations are blocked by configuration rather than by convention. The setup lives in [dotfiles-public](https://github.com/yktsnet/dotfiles-public); the process itself is visible in this repository's issues and PRs.
