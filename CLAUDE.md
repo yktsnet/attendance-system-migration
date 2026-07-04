@@ -9,7 +9,7 @@ Claude Code は本ファイルを最優先の指示として実行すること�
 - 起動時に `issues/` 内の対象 Issue（`status: open`）を確認する。
 - 実装開始前に `context/conventions.md` と `context/structure.md` を読み、規約と構造を把握する。
 - ローカル環境にて `claude/{id}-{branch-slug}` ブランチ上で作業していることを認識する。
-- 実装・検証・PR 作成は `.claude/skills/pr-workflow/SKILL.md` の手順に従う。
+- 実装・検証・PR 作成はグローバルの `pr-workflow` スキル（`~/.claude/skills/pr-workflow/SKILL.md`）の手順に従う。
 
 ## コマンド
 - API ビルド（構文・型チェック）: `dotnet build src/Api/AttendanceApi.csproj`
