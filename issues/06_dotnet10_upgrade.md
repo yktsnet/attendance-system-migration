@@ -2,8 +2,8 @@
 id: 06
 skill: pr-workflow
 branch-slug: dotnet10-upgrade
-github_issue:
-status: open
+github_issue: 13
+status: close
 type: cleanup
 対象: src/Api/AttendanceApi.csproj, src/Api.Tests/AttendanceApi.Tests.csproj, src/Api/Dockerfile, .github/workflows/ci.yml, .github/workflows/deploy.yml
 内容: .NET 8 は2026-11-10にEOL（サポート終了）を迎える。次期LTSである.NET 10へ移行し、TargetFramework・関連パッケージ・Docker/CIのSDKバージョンを揃える。
