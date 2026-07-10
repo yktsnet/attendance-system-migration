@@ -70,7 +70,7 @@ public class CsvExportTests
     {
         // 2026-05-01(金)〜2026-05-03(日) の3日間 → 土日(05-02,05-03)を除き1件のみ
         var records = AttendanceService.GenerateDemoRecords(
-            "EMP-T", Array.Empty<DateOnly>(),
+            "EMP-T",
             new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 3), 15, new Random(1));
 
         Assert.Single(records);
@@ -78,21 +78,10 @@ public class CsvExportTests
     }
 
     [Fact]
-    public void GenerateDemoRecords_SkipsExistingDates()
-    {
-        var existing = new[] { new DateOnly(2026, 5, 1) };
-        var records = AttendanceService.GenerateDemoRecords(
-            "EMP-T", existing,
-            new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 1), 15, new Random(1));
-
-        Assert.Empty(records);
-    }
-
-    [Fact]
     public void GenerateDemoRecords_AllRecordsHaveRequiredFieldsAndValidTimeOrder()
     {
         var records = AttendanceService.GenerateDemoRecords(
-            "EMP-T", Array.Empty<DateOnly>(),
+            "EMP-T",
             new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31), 15, new Random(7));
 
         Assert.NotEmpty(records);
@@ -107,10 +96,56 @@ public class CsvExportTests
     public void GenerateDemoRecords_NoDuplicateDatesForSameEmployee()
     {
         var records = AttendanceService.GenerateDemoRecords(
-            "EMP-T", Array.Empty<DateOnly>(),
+            "EMP-T",
             new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31), 15, new Random(7));
 
         var dates = records.Select(r => DateOnly.FromDateTime(r.ClockIn)).ToList();
         Assert.Equal(dates.Count, dates.Distinct().Count());
+    }
+
+    [Fact]
+    public void GenerateDemoRecords_SameSeedAndRange_ProducesIdenticalOutput()
+    {
+        // 同じ範囲・同じ乱数シードで2回生成しても結果が一致すること（冪等性の前提）。
+        var r1 = AttendanceService.GenerateDemoRecords(
+            "EMP-T", new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31), 15, new Random(42));
+        var r2 = AttendanceService.GenerateDemoRecords(
+            "EMP-T", new DateOnly(2026, 5, 1), new DateOnly(2026, 5, 31), 15, new Random(42));
+
+        Assert.Equal(r1, r2);
+    }
+
+    // --- CalcDemoResetWindow: 削除範囲と生成範囲の整合性（ResetForDemoAsync の冪等性の前提） ---
+
+    [Fact]
+    public void CalcDemoResetWindow_DeleteRangeCoversGenerateRange()
+    {
+        var today = new DateOnly(2026, 7, 10);
+        var window = AttendanceService.CalcDemoResetWindow(today);
+
+        Assert.Equal(window.DeleteFrom, window.GenerateFrom);
+        Assert.Equal(today, window.DeleteTo);
+        Assert.Equal(today.AddDays(-1), window.GenerateTo);
+        Assert.True(window.GenerateTo <= window.DeleteTo, "生成範囲は削除範囲に収まっていること");
+    }
+
+    [Fact]
+    public void CalcDemoResetWindow_WindowSpansSixtyDays()
+    {
+        var today = new DateOnly(2026, 7, 10);
+        var window = AttendanceService.CalcDemoResetWindow(today);
+
+        Assert.Equal(60, today.DayNumber - window.DeleteFrom.DayNumber);
+    }
+
+    [Fact]
+    public void CalcDemoResetWindow_SameToday_IsDeterministic()
+    {
+        // 同じ日に何度呼んでも同じ範囲になること（ResetForDemoAsync を繰り返し実行した際の冪等性の前提）。
+        var today = new DateOnly(2026, 7, 10);
+        var w1 = AttendanceService.CalcDemoResetWindow(today);
+        var w2 = AttendanceService.CalcDemoResetWindow(today);
+
+        Assert.Equal(w1, w2);
     }
 }
