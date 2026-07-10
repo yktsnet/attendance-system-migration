@@ -2,8 +2,8 @@
 id: 05
 skill: pr-workflow
 branch-slug: demo-reset-rolling-window
-github_issue:
-status: open
+github_issue: 11
+status: close
 type: fix
 対象: src/Api/Services/AttendanceService.cs, src/Api.Tests/CsvExportTests.cs, src/Web/src/components/ClockPanel.tsx
 内容: デモリセット（`POST /demo/reset`）が「昨日まで補完」と謳いながら、実際には前回押下時にできた1日分のギャップしか埋まらないバグを修正する。固定開始日（2025-12-01）による無限成長ウィンドウをやめ、直近60日のローリングウィンドウを毎回全削除→全再生成する冪等な設計に変更し、UI文言もウィンドウ幅が固定であることが分かるように更新する。
