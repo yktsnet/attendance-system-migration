@@ -129,19 +129,23 @@ After migration, components are fully separated by responsibility, and PostBack 
 - **Normalize CSV output**: Replace with UTF-8 download via `Content-Disposition` header.
 
 ```mermaid
-graph LR
+graph TD
     React["React / TypeScript\n(UI Layer)"]
     API["ASP.NET Core\nMinimal API\n(API Layer)"]
-    HUB["AttendanceHub\n(SignalR)"]
     SVC["AttendanceService\n(Service Layer)"]
     DAP["Dapper\n(Repository Layer)"]
     DB[("PostgreSQL")]
-    React -->|"HTTP / JSON\nAsync, no page reload"| API
+    HUB["AttendanceHub\n(SignalR)"]
+
+    %% Request Flow
+    React -->|"HTTP / JSON\n(Async, no page reload)"| API
     API --> SVC
     SVC --> DAP
     DAP --> DB
+
+    %% Real-time Loop Flow
     SVC -->|"IHubContext Push"| HUB
-    HUB -->|"WebSocket\nClockUpdate / Alerts"| React
+    HUB -->|"WebSocket\n(ClockUpdate / Alerts)"| React
 ```
 
 ### Separation of Calculation Logic (Testability)

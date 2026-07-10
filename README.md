@@ -129,19 +129,23 @@ graph TD
 - **CSV 出力の正規化**: `Content-Disposition` ヘッダーによる UTF-8 ダウンロードに置き換え。
 
 ```mermaid
-graph LR
+graph TD
     React["React / TypeScript\n(UI 層)"]
     API["ASP.NET Core\nMinimal API\n(API 層)"]
-    HUB["AttendanceHub\n(SignalR)"]
     SVC["AttendanceService\n(Service 層)"]
     DAP["Dapper\n(Repository 層)"]
     DB[("PostgreSQL")]
-    React -->|"HTTP / JSON\n非同期・ページリロードなし"| API
+    HUB["AttendanceHub\n(SignalR)"]
+
+    %% リクエストの流れ
+    React -->|"HTTP / JSON\n(非同期・ページリロードなし)"| API
     API --> SVC
     SVC --> DAP
     DAP --> DB
+
+    %% リアルタイムのループ
     SVC -->|"IHubContext Push"| HUB
-    HUB -->|"WebSocket\nClockUpdate / Alerts"| React
+    HUB -->|"WebSocket\n(ClockUpdate / Alerts)"| React
 ```
 
 ### Separation of Calculation Logic (Testability)
