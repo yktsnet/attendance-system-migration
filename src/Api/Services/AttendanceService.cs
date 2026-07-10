@@ -53,7 +53,7 @@ public class AttendanceService
 {
     private readonly string _connectionString;
     private readonly IHubContext<AttendanceHub> _hub;
-    private static readonly DateOnly DemoStartDate = new(2025, 12, 1);
+    private const int DemoWindowDays = 60; // デモデータのローリングウィンドウ幅（日）
     private const decimal OvertimeAlertThreshold = 5m; // 5h以上で警告（デモ用）
 
     public AttendanceService(IConfiguration config, IHubContext<AttendanceHub> hub)
@@ -232,56 +232,65 @@ public class AttendanceService
 
     public async Task ResetForDemoAsync()
     {
-        var yesterday = DateOnly.FromDateTime(DateTime.Today.AddDays(-1));
-        var rng = new Random(42);
+        var today  = DateOnly.FromDateTime(DateTime.Today);
+        var window = CalcDemoResetWindow(today);
+        var rng    = new Random(42);
 
         using var conn = new NpgsqlConnection(_connectionString);
 
+        // ローリングウィンドウ全体（開始日〜今日）を一旦全削除する。今日も削除対象に含めることで、
+        // 生成側が今日を対象外のまま空けるため「今日はクリア」という体験は維持される。
         await conn.ExecuteAsync(
-            "DELETE FROM attendance_logs WHERE DATE(clock_in) = CURRENT_DATE");
+            "DELETE FROM attendance_logs WHERE DATE(clock_in) BETWEEN @Start AND @End",
+            new
+            {
+                Start = window.DeleteFrom.ToDateTime(TimeOnly.MinValue),
+                End   = window.DeleteTo.ToDateTime(TimeOnly.MinValue),
+            });
 
         var employees = await conn.QueryAsync<EmployeeRecord>(
             "SELECT id, hourly_wage, round_unit_minutes FROM employees");
 
         foreach (var emp in employees)
         {
-            var existingDates = (await conn.QueryAsync<DateTime>(
-                "SELECT DATE(clock_in) FROM attendance_logs WHERE employee_id = @Id AND clock_in IS NOT NULL",
-                new { Id = emp.Id }))
-                .Select(DateOnly.FromDateTime)
-                .ToHashSet();
-
-            var records = GenerateDemoRecords(emp.Id, existingDates, DemoStartDate, yesterday, emp.RoundUnitMinutes, rng);
+            var records = GenerateDemoRecords(emp.Id, window.GenerateFrom, window.GenerateTo, emp.RoundUnitMinutes, rng);
             foreach (var rec in records)
             {
                 await conn.ExecuteAsync(
                     @"INSERT INTO attendance_logs (employee_id, clock_in, clock_out, is_corrected)
-                      VALUES (@EmployeeId, @ClockIn, @ClockOut, @IsCorrected)
-                      ON CONFLICT DO NOTHING",
+                      VALUES (@EmployeeId, @ClockIn, @ClockOut, @IsCorrected)",
                     new { EmployeeId = rec.EmployeeId, ClockIn = rec.ClockIn, ClockOut = rec.ClockOut, IsCorrected = rec.IsCorrected });
             }
         }
     }
 
     /// <summary>
-    /// 1名分のデモ勤怠データを生成する（DB非依存）。土日・既存日付はスキップし、
+    /// デモリセットの削除範囲と生成範囲を算出する（DB非依存）。削除範囲（DeleteFrom〜DeleteTo）が
+    /// 生成範囲（GenerateFrom〜GenerateTo）を過不足なく包含することを保証し、
+    /// 「同じ日に何度実行しても同じ状態に収束する」冪等性の前提となる。単体テスト可能。
+    /// </summary>
+    public static (DateOnly DeleteFrom, DateOnly DeleteTo, DateOnly GenerateFrom, DateOnly GenerateTo) CalcDemoResetWindow(DateOnly today)
+    {
+        var start = today.AddDays(-DemoWindowDays);
+        return (DeleteFrom: start, DeleteTo: today, GenerateFrom: start, GenerateTo: today.AddDays(-1));
+    }
+
+    /// <summary>
+    /// 1名分のデモ勤怠データを生成する（DB非依存）。土日はスキップし、
     /// 対象期間内で重複のない1日1件のレコード群を返す。投入整合性（必須項目充足・重複なし）を単体テスト可能。
     /// </summary>
     public static List<DemoAttendanceRecord> GenerateDemoRecords(
         string employeeId,
-        IEnumerable<DateOnly> existingDates,
         DateOnly demoStartDate,
         DateOnly lastDate,
         int roundUnitMinutes,
         Random rng)
     {
-        var existing = existingDates as ISet<DateOnly> ?? existingDates.ToHashSet();
         var records  = new List<DemoAttendanceRecord>();
         var current  = demoStartDate;
         while (current <= lastDate)
         {
-            if (current.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday
-                && !existing.Contains(current))
+            if (current.DayOfWeek is not DayOfWeek.Saturday and not DayOfWeek.Sunday)
             {
                 var (clockIn, clockOut) = GenerateWorkTime(current, roundUnitMinutes, rng);
                 var corrected = rng.NextDouble() < 0.05;

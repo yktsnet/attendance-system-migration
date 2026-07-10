@@ -81,7 +81,7 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
     setMessage(null)
     try {
       await api.demoReset()
-      setMessage({ ok: true, text: 'リセット完了。昨日まで補完済み' })
+      setMessage({ ok: true, text: 'リセット完了。直近60日を再生成しました' })
       fetchStatus(selectedId)
     } catch {
       setMessage({ ok: false, text: 'リセットに失敗しました' })
@@ -106,7 +106,7 @@ export function ClockPanel({ employees, selectedId, setSelectedId }: Props) {
           <span>↺</span>
           <span>{resetting ? '処理中...' : 'デモリセット'}</span>
         </button>
-        <span className="text-xs text-slate-300">昨日まで補完・今日をクリア</span>
+        <span className="text-xs text-slate-300">直近60日を再生成・当日は打刻体験用に空欄</span>
       </div>
 
       {/* 社員選択 + 状態 */}
