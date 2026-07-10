@@ -17,7 +17,7 @@ Claude Code は本ファイルを最優先の指示として実行すること�
 - フロントエンド型チェック/ビルド: `cd src/Web && npm ci && npm run build`
 
 ## アーキテクチャの要点
-- バックエンドは .NET 8 Minimal API（`src/Api`）。エンドポイントは `Endpoints/`、ドメイン計算は `Services/AttendanceCalculator.cs` に分離しテスト可能にしている。
+- バックエンドは .NET 10 Minimal API（`src/Api`）。エンドポイントは `Endpoints/`、ドメイン計算は `Services/AttendanceCalculator.cs` に分離しテスト可能にしている。
 - リアルタイム出勤ボードは SignalR（`Hubs/AttendanceHub.cs`）で配信する。
 - フロントエンドは React + TypeScript + Vite（`src/Web`）。API 呼び出しは `src/api.ts` に集約。
 - 永続層は PostgreSQL（Dapper）。スキーマ/シードは `infrastructure/db/` にある。

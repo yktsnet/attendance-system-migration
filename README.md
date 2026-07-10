@@ -5,7 +5,7 @@
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
 [![Deploy](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml)
 
-レガシーな WebForms 業務アプリを題材に、`.NET 8 Web API + React` への段階的移行を実践するサンプルプロジェクト。
+レガシーな WebForms 業務アプリを題材に、`.NET 10 Web API + React` への段階的移行を実践するサンプルプロジェクト。
 
 [order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms 移行）の姉妹リポ。WebForms 固有の問題（AutoPostBack・ViewState・Page_Load 集中）の解体と再構成に加え、**WebForms では構造的に実現不可能だったリアルタイム機能**の追加まで扱う。
 
@@ -60,7 +60,7 @@ WebForms アプリは機能する。ページは表示され、データは保�
 
 - **解読**: AutoPostBack・ViewState・Page_Load 集中という WebForms 固有の問題の特定
 - **分離**: UI、Service、Repository 層への責務分離
-- **刷新**: .NET 8 Web API と React による再構築
+- **刷新**: .NET 10 Web API と React による再構築
 - **品質**: テスタビリティの確保と単体テストの導入
 - **拡張**: 構造分離が完了した基盤への WebSocket リアルタイム機能の追加
 
@@ -188,7 +188,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 
 ### Before / After Comparison
 
-| Before (WebForms) | After (.NET 8 + React) |
+| Before (WebForms) | After (.NET 10 + React) |
 |---|---|
 | 出勤状況確認にページリロード必須 | SignalR WebSocket で即時反映 |
 | 未退勤は翌日スプレッドシートで発覚 | 当日中に自動検知 → 管理者へ Push |
@@ -211,7 +211,7 @@ WebForms はサーバーからクライアントへの Push が構造的に不�
 | Layer | Technology | Reason |
 |---|---|---|
 | **Frontend** | React, TypeScript, Vite, Tailwind CSS | 打刻 UX と管理ダッシュボードを同一 SPA で構成。型安全と高速ビルドを両立 |
-| **Backend** | .NET 8 (Minimal API), SignalR, xUnit | 移行元 WebForms の C# 資産を引き継ぎ軽量 API へ再構成。Push 機能は SignalR、計算ロジックは xUnit で担保 |
+| **Backend** | .NET 10 (Minimal API), SignalR, xUnit | 移行元 WebForms の C# 資産を引き継ぎ軽量 API へ再構成。Push 機能は SignalR、計算ロジックは xUnit で担保 |
 | **Database** | PostgreSQL (Dapper) | ORM フル機能に依存せず、SQL に近い軽量アクセスで勤怠集計を扱う |
 | **Infrastructure** | Docker Compose, Cloudflare Tunnel, GitHub Actions, NixOS (オンプレ) | IIS/Windows 依存を排除し同一手順で起動。CI/CD・常時公開まで一人で構築 |
 
@@ -336,7 +336,7 @@ cp .env.example .env
 │       ├── Attendance.aspx               # WebForms マークアップ（参照用）
 │       └── Attendance.aspx.cs            # コードビハインド（参照用・実行不要）
 ├── src/
-│   ├── Api/                              # After: .NET 8 Minimal API
+│   ├── Api/                              # After: .NET 10 Minimal API
 │   │   ├── Endpoints/
 │   │   │   ├── AttendanceEndpoints.cs
 │   │   │   ├── AuthEndpoints.cs

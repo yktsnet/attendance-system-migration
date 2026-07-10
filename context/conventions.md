@@ -3,7 +3,7 @@
 コードの書き方・編集の共通ルール（どう書くか）。ディレクトリ構成・データフローは `structure.md` を参照。
 
 ## 1. 技術スタック
-- **バックエンド**: .NET 8 Minimal API + SignalR。テストは xUnit。
+- **バックエンド**: .NET 10 Minimal API + SignalR。テストは xUnit。
 - **フロントエンド**: React + TypeScript + Vite + Tailwind CSS。
 - **データベース**: PostgreSQL（Dapper による軽量アクセス、ORM フル機能には依存しない）。
 - **インフラ**: Docker Compose、GitHub Actions（CI/CD）、Cloudflare Tunnel（デモ公開）、NixOS（オンプレ）。

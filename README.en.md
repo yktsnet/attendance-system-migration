@@ -5,7 +5,7 @@
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
 [![Deploy](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml)
 
-A sample project for practicing the step-by-step migration of a legacy WebForms business application to `.NET 8 Web API + React`.
+A sample project for practicing the step-by-step migration of a legacy WebForms business application to `.NET 10 Web API + React`.
 
 Sister repo of [order-system-migration](https://github.com/yktsnet/order-system-migration) (WinForms migration). In addition to deconstructing and restructuring WebForms-specific problems (AutoPostBack, ViewState, Page_Load concentration), it also covers **adding real-time features that were structurally impossible with WebForms**.
 
@@ -60,7 +60,7 @@ The goal of this project is to make these structural problems visible and to dem
 
 - **Decode**: Identify WebForms-specific problems — AutoPostBack, ViewState, concentrated Page_Load logic
 - **Separate**: Separate responsibilities into UI, Service, and Repository layers
-- **Rebuild**: Reconstruct with .NET 8 Web API and React
+- **Rebuild**: Reconstruct with .NET 10 Web API and React
 - **Quality**: Ensure testability and introduce unit tests
 - **Extend**: Add WebSocket real-time features to the foundation after structural separation is complete
 
@@ -188,7 +188,7 @@ WebForms is structurally incapable of pushing from server to client. Phase 2 sta
 
 ### Before / After Comparison
 
-| Before (WebForms) | After (.NET 8 + React) |
+| Before (WebForms) | After (.NET 10 + React) |
 |---|---|
 | Page reload required to check attendance status | Instant updates via SignalR WebSocket |
 | Missed clock-outs discovered on next day's spreadsheet | Automatically detected same day → Push to administrator |
@@ -211,7 +211,7 @@ WebForms is structurally incapable of pushing from server to client. Phase 2 sta
 | Layer | Technology | Reason |
 |---|---|---|
 | **Frontend** | React, TypeScript, Vite, Tailwind CSS | Compose attendance UX and admin dashboard in a single SPA. Achieve both type safety and fast builds |
-| **Backend** | .NET 8 (Minimal API), SignalR, xUnit | Inherit the C# assets from the migrated WebForms and reconstruct as a lightweight API. Push features via SignalR, calculation logic guaranteed by xUnit |
+| **Backend** | .NET 10 (Minimal API), SignalR, xUnit | Inherit the C# assets from the migrated WebForms and reconstruct as a lightweight API. Push features via SignalR, calculation logic guaranteed by xUnit |
 | **Database** | PostgreSQL (Dapper) | Handle attendance aggregation with lightweight access close to SQL, without relying on full ORM features |
 | **Infrastructure** | Docker Compose, Cloudflare Tunnel, GitHub Actions, NixOS (on-premise) | Eliminate IIS/Windows dependency and start with the same procedure everywhere. Build CI/CD and continuous publishing solo |
 
@@ -336,7 +336,7 @@ cp .env.example .env
 │       ├── Attendance.aspx               # WebForms markup (reference)
 │       └── Attendance.aspx.cs            # Code-behind (reference only, no runtime needed)
 ├── src/
-│   ├── Api/                              # After: .NET 8 Minimal API
+│   ├── Api/                              # After: .NET 10 Minimal API
 │   │   ├── Endpoints/
 │   │   │   ├── AttendanceEndpoints.cs
 │   │   │   ├── AuthEndpoints.cs
