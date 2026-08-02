@@ -7,7 +7,7 @@
 ```
 attendance-system-migration/
 ├── src/              # アプリ本体（Api / Web）
-├── infrastructure/   # DB 初期化・シード・デプロイスクリプト
+├── infrastructure/   # DB 初期化・シード
 ├── legacy/           # 移行元 WebForms（Before の参照用）
 ├── docker-compose.yml # ローカル/本番コンテナ構成
 ├── context/          # Agent 向け共通コンテキスト（本ファイル群）

@@ -3,11 +3,24 @@
 # .NET WebForms Migration (Attendance Management System)
 
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
-[![Deploy](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml)
 
 A sample project for practicing the step-by-step migration of a legacy WebForms business application to `.NET 10 Web API + React`.
 
 Sister repo of [order-system-migration](https://github.com/yktsnet/order-system-migration) (WinForms migration). In addition to deconstructing and restructuring WebForms-specific problems (AutoPostBack, ViewState, Page_Load concentration), it also covers **adding real-time features that were structurally impossible with WebForms**.
+
+## Screenshots
+
+The migrated (After) React frontend. `docker compose up` reproduces the same screens locally.
+
+| Clock in/out | Punch history |
+|---|---|
+| ![Clock in/out screen](docs/screenshots/webforms01.png) | ![Punch history screen](docs/screenshots/webforms02.png) |
+| Clock-in and clock-out complete on a single screen. The full-page reload of the WebForms PostBack is gone; state updates from the API response alone | Monthly working hours with CSV export. Days edited by an administrator are marked as corrected |
+
+| Real-time attendance board | Administrator login |
+|---|---|
+| ![Real-time attendance board](docs/screenshots/webforms03.png) | ![Administrator login screen](docs/screenshots/webforms04.png) |
+| WebSocket delivery via SignalR. Punches appear immediately, and missing clock-outs or overtime-limit breaches are pushed to administrators the same day. WebForms could not push from the server at all, so checking attendance required a page reload | Employee management and punch correction are restricted to administrators. Demo credentials are shown on the screen |
 
 ---
 
@@ -53,7 +66,6 @@ The WebForms app works. Pages render, data is saved, and CSV is exported. The pr
 The goal of this project is to make these structural problems visible and to demonstrate through design the rationale that can justify migration.
 
 **Before Demo:** https://attendance-system-migration-legacy.pages.dev  
-**After Demo (WebForms):** https://webforms.ykts.net  
 **After API Documentation (Swagger UI):** `/api-docs`
 
 ### Key Practices
@@ -247,54 +259,15 @@ For deconstruction of WebForms-specific problems (AutoPostBack, ViewState, Page_
 
 ### After Demo
 
-**After Demo (WebForms):** https://webforms.ykts.net
+See [Screenshots](#screenshots) above for the running application. Local startup is covered by `docker compose up` in [Quick Start](#quick-start).
 
-[order-system-migration](https://github.com/yktsnet/order-system-migration) (WinForms After) and this repo (WebForms After) each have independent Cloudflare Tunnels, and **both are always running**.
+The sister repo [order-system-migration](https://github.com/yktsnet/order-system-migration) (WinForms After) and this repo (WebForms After) each get an independent Cloudflare Tunnel and can be co-located on a single on-premises NixOS server. Ports are split (5154 / 5153) and the tunnel routes by hostname, so browsers reach the server only through the tunnel and no host port is exposed.
 
-```mermaid
-graph LR
-    User["Browser"]
-    Pages["Cloudflare Pages\n(Before demo, always running)"]
-    TunnelWF["Cloudflare Tunnel\nwebforms.ykts.net"]
-    TunnelWIN["Cloudflare Tunnel\nwinforms.ykts.net"]
-    subgraph SERVER["On-premise Server (NixOS)"]
-        SVC2["attendance-system-migration\nDocker Compose :5154"]
-        SVC1["order-system-migration\nDocker Compose :5153"]
-        DB2[("PostgreSQL")]
-        DB1[("PostgreSQL")]
-    end
-    User -->|"HTTPS"| Pages
-    User -->|"HTTPS"| TunnelWF
-    User -->|"HTTPS"| TunnelWIN
-    TunnelWF --> SVC2
-    TunnelWIN --> SVC1
-    SVC2 --> DB2
-    SVC1 --> DB1
-```
+### Deployment method
 
-### Deployment Steps (Initial)
+A push to the main branch triggers GitHub Actions, which rsyncs to the server over Tailscale and then runs `docker compose up --build`. This keeps the host's SSH port off the public internet and lets the CI's reach be constrained by Tailscale ACLs.
 
-**1. Server Requirements**
-
-- Docker (`docker compose` available)
-- Cloudflare Tunnel (`cloudflared`)
-
-```bash
-cloudflared tunnel create webforms-migration
-cloudflared tunnel route dns webforms-migration webforms.ykts.net
-```
-
-**2. Deploy**
-
-Pushing to the main branch triggers GitHub Actions for automatic deployment (rsync via Tailscale + `docker compose up --build`).
-Required GitHub Secrets (deployment host, SSH key, Tailscale OAuth, etc.) are managed in repository operations documentation (not listed in README).
-
-For manual deployment:
-
-```bash
-cp .env.example .env
-./infrastructure/deploy.sh
-```
+The server needs only Docker (with `docker compose`) and `cloudflared`, with a hostname assigned to the tunnel.
 
 ---
 
@@ -317,8 +290,7 @@ cp .env.example .env
 .
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                        # CI (.NET tests + React build)
-│       └── deploy.yml                    # Deploy (rsync via Tailscale + docker compose up)
+│       └── ci.yml                        # CI (.NET tests + React build)
 ├── infrastructure/
 │   ├── db/
 │   │   ├── init/
@@ -326,7 +298,6 @@ cp .env.example .env
 │   │   └── seed/
 │   │       ├── generate_seed.py          # Dummy data generation script
 │   │       └── 02_seed.sql               # Pre-generated sample data
-│   ├── deploy.sh                         # .env transfer + docker compose up --build
 │   └── setup.sh                          # Server initial setup (Docker check, directory creation)
 ├── legacy/
 │   └── AttendanceWebForms/               # Before (unchanged)

@@ -3,11 +3,24 @@
 # .NET WebForms Migration (Attendance Management System)
 
 [![CI](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/ci.yml)
-[![Deploy](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml/badge.svg?branch=main)](https://github.com/yktsnet/attendance-system-migration/actions/workflows/deploy.yml)
 
 レガシーな WebForms 業務アプリを題材に、`.NET 10 Web API + React` への段階的移行を実践するサンプルプロジェクト。
 
 [order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms 移行）の姉妹リポ。WebForms 固有の問題（AutoPostBack・ViewState・Page_Load 集中）の解体と再構成に加え、**WebForms では構造的に実現不可能だったリアルタイム機能**の追加まで扱う。
+
+## Screenshots
+
+移行後（After）の React フロントエンド。`docker compose up` で同じ画面をローカルに再現できる。
+
+| 打刻 | 打刻履歴 |
+|---|---|
+| ![打刻画面](docs/screenshots/webforms01.png) | ![打刻履歴画面](docs/screenshots/webforms02.png) |
+| 出勤・退勤を1画面で完結させる。WebForms 版で全体リロードを伴っていた PostBack を排し、状態は API 応答だけで更新する | 月単位の勤務時間を一覧し CSV 出力する。管理者が修正した日は「修正済」で区別する |
+
+| リアルタイム出勤ボード | 管理者ログイン |
+|---|---|
+| ![リアルタイム出勤ボード](docs/screenshots/webforms03.png) | ![管理者ログイン画面](docs/screenshots/webforms04.png) |
+| SignalR による WebSocket 配信。打刻を即時反映し、未退勤・36協定超過は当日中に管理者へ push する。WebForms ではサーバー Push が構造的に不可能で、出勤状況の確認にページリロードを要した | 社員管理・打刻修正を管理者に限定する。デモ用の資格情報は画面に併記している |
 
 ---
 
@@ -53,7 +66,6 @@ WebForms アプリは機能する。ページは表示され、データは保�
 本プロジェクトの目的は、こうした構造的問題を可視化し、移行を正当化できる根拠を設計で示すことにある。
 
 **Before Demo:** https://attendance-system-migration-legacy.pages.dev  
-**After Demo (WebForms):** https://webforms.ykts.net  
 **After API ドキュメント (Swagger UI):** `/api-docs`
 
 ### Key Practices
@@ -247,54 +259,15 @@ WebForms 固有問題（AutoPostBack・ViewState・Page_Load 集中）の解体�
 
 ### After Demo
 
-**After Demo (WebForms):** https://webforms.ykts.net
+動作は上部の [Screenshots](#screenshots) を参照。手元での起動は [Quick Start](#quick-start) の `docker compose up` で完結する。
 
-[order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms After）と本リポ（WebForms After）はそれぞれ独立した Cloudflare Tunnel を持ち、**両方常時稼働**する。
+姉妹リポの [order-system-migration](https://github.com/yktsnet/order-system-migration)（WinForms After）と本リポ（WebForms After）は、それぞれ独立した Cloudflare Tunnel を持ち、1台のオンプレサーバー（NixOS）に同居させられる。ポートを 5154 / 5153 に分け、Tunnel 側でホスト名を振り分ける。ブラウザからサーバーへは Tunnel 経由のみで到達し、ホストのポートは公開しない。
 
-```mermaid
-graph LR
-    User["ブラウザ"]
-    Pages["Cloudflare Pages\n（Before デモ・常時稼働）"]
-    TunnelWF["Cloudflare Tunnel\nwebforms.ykts.net"]
-    TunnelWIN["Cloudflare Tunnel\nwinforms.ykts.net"]
-    subgraph SERVER["オンプレサーバー（NixOS）"]
-        SVC2["attendance-system-migration\nDocker Compose :5154"]
-        SVC1["order-system-migration\nDocker Compose :5153"]
-        DB2[("PostgreSQL")]
-        DB1[("PostgreSQL")]
-    end
-    User -->|"HTTPS"| Pages
-    User -->|"HTTPS"| TunnelWF
-    User -->|"HTTPS"| TunnelWIN
-    TunnelWF --> SVC2
-    TunnelWIN --> SVC1
-    SVC2 --> DB2
-    SVC1 --> DB1
-```
+### デプロイ方式
 
-### Deployment Steps (Initial)
+main ブランチへの push を契機に GitHub Actions が起動し、Tailscale 経由でサーバーへ rsync してから `docker compose up --build` を実行する**プッシュ型デプロイ**。ホストの SSH ポートをインターネットへ公開せず、CI からの到達経路を Tailscale の ACL で絞れる点が採用理由。
 
-**1. サーバー要件**
-
-- Docker（`docker compose` が使えること）
-- Cloudflare Tunnel（`cloudflared`）
-
-```bash
-cloudflared tunnel create webforms-migration
-cloudflared tunnel route dns webforms-migration webforms.ykts.net
-```
-
-**2. デプロイ**
-
-main ブランチへの push で GitHub Actions が自動デプロイします（Tailscale 経由 rsync + `docker compose up --build`）。
-必要な GitHub Secrets（デプロイ先ホスト・SSH 鍵・Tailscale OAuth 等）はリポジトリ運用ドキュメントで管理する（README には記載しない）。
-
-手動デプロイが必要な場合:
-
-```bash
-cp .env.example .env
-./infrastructure/deploy.sh
-```
+サーバー側の要件は Docker（`docker compose` が使えること）と `cloudflared` の2つで、Tunnel にホスト名を割り当てて配信する。
 
 ---
 
@@ -317,8 +290,7 @@ cp .env.example .env
 .
 ├── .github/
 │   └── workflows/
-│       ├── ci.yml                        # CI（.NET テスト + React ビルド）
-│       └── deploy.yml                    # Deploy（Tailscale 経由 rsync + docker compose up）
+│       └── ci.yml                        # CI（.NET テスト + React ビルド）
 ├── infrastructure/
 │   ├── db/
 │   │   ├── init/
@@ -326,7 +298,6 @@ cp .env.example .env
 │   │   └── seed/
 │   │       ├── generate_seed.py          # ダミーデータ生成スクリプト
 │   │       └── 02_seed.sql               # 生成済みサンプルデータ
-│   ├── deploy.sh                         # .env 転送・docker compose up --build
 │   └── setup.sh                          # サーバー初回セットアップ（Docker 確認・ディレクトリ作成）
 ├── legacy/
 │   └── AttendanceWebForms/               # Before（変更なし）
